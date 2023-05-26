@@ -15,7 +15,7 @@ class Sampler {
     TickType_t start_timer();
     void stop_timer();
 
-    StreamBufferHandle_t get_stream_buffer() { return stream_buf_; }
+    inline StreamBufferHandle_t get_stream_buffer() { return stream_buf_; }
 
   private:
     void timer_callback(void *arg);
