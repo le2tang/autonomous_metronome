@@ -1,8 +1,8 @@
 #include "rfft.h"
 
 struct OnsetDetectionParams {
+    int num_samples;
     int num_bands;
-    int channel;
 };
 
 #pragma once
@@ -15,8 +15,8 @@ class OnsetDetection {
     float update(float *in);
 
   private:
+    int num_samples_;
     int num_bands_;
-    int channel_;
 
     fft::RFFTParams rfft_params_;
     fft::RFFT rfft_inst_;

@@ -4,7 +4,9 @@
 
 namespace fft {
 
-RFFTParams::RFFTParams(int rfft_size) {
+RFFTParams::RFFTParams(int rfft_size) { init(rfft_size); }
+
+void RFFTParams::init(int rfft_size) {
     rfft_size_ = rfft_size;
     a_coeffs_ = new float[rfft_size];
     b_coeffs_ = new float[rfft_size];

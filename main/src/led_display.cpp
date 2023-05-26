@@ -1,5 +1,10 @@
 #include "led_display.h"
 
+#include <math.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #include "util.h"
 
 void LedDisplay::init(const LedDisplayParams &params) {
@@ -10,28 +15,28 @@ void LedDisplay::init(const LedDisplayParams &params) {
     tempo_ = TempoEstimate(2, 0);
 
     led_decay_(params.led_decay);
-    led_.Init(params.led_pin, false);
 }
 
-void LedDisplay::reset_start_millis() { start_millis_ = System::GetNow(); }
+void LedDisplay::reset_start_millis() {
+    start_millis_ = xTaskGetTickCount() / configTICK_RATE_HZ;
+}
 
 void LedDisplay::set_tempo(const TempoEstimate &new_tempo) {
     last_tempo_ = tempo_;
     tempo_ = new_tempo;
 
-    last_transition_time_ = 0.001 * System::GetNow();
+    last_transition_time_ = xTaskGetTickCount() / configTICK_RATE_HZ;
 }
 
 void LedDisplay::update() {
-    unsigned long curr_millis = System::GetNow();
-    unsigned long elapsed_millis = curr_millis - start_millis_;
-    float elapsed_time = 0.001 * elapsed_millis;
+    float curr_time = xTaskGetTickCount() / configTICK_RATE_HZ;
+    float elapsed_time = curr_time - start_time_;
 
-    if (0.001 * curr_millis - last_transition_time_ > transition_duration_) {
+    if (curr_time - last_transition_time_ > transition_duration_) {
         float phase = fmod(tempo_.rate * elapsed_time - tempo_.phase, 1);
-        unsigned int led_pwr = 256 * exp(-led_decay_ * phase);
+        float led_pwr = exp(-led_decay_ * phase);
 
-        led_.Set(led_pwr);
+        led_.set(led_pwr);
     } else {
         float last_phase_unwrapped =
             last_tempo_.rate * elapsed_time - last_tempo_.phase;
@@ -42,8 +47,8 @@ void LedDisplay::update() {
 
         float phase = fmod(
             wgt * last_phase_unwrapped + (1 - wgt) * curr_phase_unwrapped, 1);
-        unsigned int led_pwr = 256 * exp(-led_decay_ * phase);
+        float led_pwr = exp(-led_decay_ * phase);
 
-        led_.Set(led_pwr);
+        led_.set(led_pwr);
     }
 }

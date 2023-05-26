@@ -1,5 +1,7 @@
 #include "onset_detection.h"
 
+#include <math.h>
+
 OnsetDetection::~OnsetDetection() {
     if (onset_) {
         delete[] onset_;
@@ -16,28 +18,27 @@ OnsetDetection::~OnsetDetection() {
 }
 
 void OnsetDetection::init(const OnsetDetectionParams &params) {
+    num_samples_ = params.num_samples;
     num_bands_ = params.num_bands;
-    channel_ = params.channel;
 
-    onset_ = new float[num_bands];
-    last_mag_sq_ = new float[num_bands];
-    last_last_phase_ = new float[num_bands];
-    last_phase_ = new float[num_bands];
+    rfft_inst_.twiddle_init(num_samples_);
+    rfft_params_.init(num_samples_);
 
-    arm_rfft_fast_init_f16(&rfft_inst_, num_bands_);
+    onset_ = new float[num_bands_];
+    last_mag_sq_ = new float[num_bands_];
+    last_last_phase_ = new float[num_bands_];
+    last_phase_ = new float[num_bands_];
 }
 
-float OnsetDetection::update(float *in, size_t size) {
-    float in_fft[size / 2 + 2];
-    arm_rfft_fast_f16(&rfft_inst_, in[channel_], in_fft, 0);
+float OnsetDetection::update(float *in) {
+    rfft_inst_.rfft(in, rfft_params_);
 
     for (int idx = 0; idx < num_bands_; ++idx) {
         int idx_re = 2 * idx;
         int idx_im = 2 * idx + 1;
 
-        float mag_sq = out_buf_[idx_re] * out_buf_[idx_re] +
-                       out_buf_[idx_im] * out_buf_[idx_im];
-        float phase = atan2(out_buf_[idx_im], out_buf_[idx_re]);
+        float mag_sq = in[idx_re] * in[idx_re] + in[idx_im] * in[idx_im];
+        float phase = atan2(in[idx_im], in[idx_re]);
 
         float phase_dev = phase - 2 * last_phase_[idx] + last_last_phase_[idx];
         onset_[idx] = mag_sq + last_mag_sq_[idx] -

@@ -9,6 +9,8 @@ class RFFTParams {
     RFFTParams(int rfft_size);
     ~RFFTParams();
 
+    void init(int rfft_size);
+
     inline int rfft_size() const { return rfft_size_; }
     const float *a_coeffs() const { return a_coeffs_; }
     const float *b_coeffs() const { return b_coeffs_; }

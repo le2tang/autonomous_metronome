@@ -1,6 +1,6 @@
 #pragma once
 
-#include "daisy.h"
+#include "led.h"
 #include "util.h"
 
 struct LedDisplayParams {
@@ -32,5 +32,5 @@ class LedDisplay {
     TempoEstimate tempo_;
 
     float led_decay_;
-    daisy::Led led_;
+    Led led_;
 };
