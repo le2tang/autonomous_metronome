@@ -1,16 +1,21 @@
 #pragma once
 
+#include <cstddef>
+
 struct Buffer {
-    init(size_t size) {
-        data = new float[size];
-        curr_idx = 0;
-        num_samples = size;
-    }
+    Buffer() : data(NULL), curr_idx(0), num_samples(0) {}
+    Buffer(size_t size) { init(size); }
 
     ~Buffer() {
         if (data) {
             delete[] data;
         }
+    }
+
+    void init(size_t size) {
+        data = new float[size];
+        curr_idx = 0;
+        num_samples = size;
     }
 
     inline float &operator[](size_t idx) { return data[idx]; }

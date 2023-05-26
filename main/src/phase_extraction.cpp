@@ -1,5 +1,7 @@
 #include "phase_extraction.h"
 
+#include <math.h>
+
 void PhaseExtraction::init(const PhaseExtractionParams &params,
                            const Buffer &in) {
     num_samples_ = params.num_samples;

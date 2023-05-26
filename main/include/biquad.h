@@ -3,6 +3,13 @@
 class Biquad {
   public:
     Biquad(float b0, float b1, float b2, float a1, float a2);
+    ~Biquad() {}
+
+    inline float b0() const { return b0_; }
+    inline float b1() const { return b1_; }
+    inline float b2() const { return b2_; }
+    inline float a1() const { return a1_; }
+    inline float a2() const { return a2_; }
 
     float filter(float x);
 

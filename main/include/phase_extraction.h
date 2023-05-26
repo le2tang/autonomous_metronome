@@ -1,6 +1,5 @@
 #pragma once
 
-#include "daisy.h"
 #include "util.h"
 
 struct PhaseExtractionParams {
@@ -9,6 +8,10 @@ struct PhaseExtractionParams {
 };
 
 class PhaseExtraction {
+  public:
+    PhaseExtraction() {}
+    ~PhaseExtraction() {}
+
     void init(const PhaseExtractionParams &params, const Buffer &in);
 
     float update(float tempo_freq);

@@ -4,7 +4,10 @@
 
 class Led {
   public:
-    Led(gpio_num_t pin, int period, int channel);
+    Led() {}
+    ~Led() {}
+
+    void init();
     void set(float pwr);
 
   private:

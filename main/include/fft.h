@@ -10,8 +10,8 @@ class FFT {
     void twiddle_init(int max_fft_size);
     void twiddle_inv_init(int max_fft_size);
 
-    void fft(float *data, int fft_size) { fft_(data, fft_size, false); }
-    void ifft(float *data, int fft_size) { fft_(data, fft_size, true); }
+    void fft(float *data, int fft_size);
+    void ifft(float *data, int fft_size);
 
   protected:
     void fft_(float *data, int fft_size, bool invert);

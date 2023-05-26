@@ -1,5 +1,7 @@
 #include "sampler.h"
 
+#include <cstddef>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
@@ -14,21 +16,16 @@ void Sampler::init(const SamplerParams &params) {
 
     sample_byte_size_ = params.sample_byte_size;
 
-    hw_timer_init(timer_callback_, NULL);
-    hw_timer_set_load_data(timer_period_);
+    hw_timer_init(callback_impl, NULL);
+    hw_timer_set_load_data(params.sample_period_us);
     hw_timer_set_reload(true);
 }
 
-TickType_t Sampler::start_timer() {
-    TickType_t curr_tick = xTaskGetTickCount();
-    hw_timer_enable(true);
-
-    return curr_tick;
+void Sampler::callback_impl(void *arg) {
+    static_cast<Sampler *>(arg)->callback();
 }
 
-void Sampler::stop_timer() { hw_timer_enable(false); }
-
-void Sampler::timer_callback(void *arg) {
+void Sampler::callback() {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     uint16_t val = adc_.read();
@@ -39,3 +36,12 @@ void Sampler::timer_callback(void *arg) {
         taskYIELD();
     }
 }
+
+TickType_t Sampler::start_timer() {
+    TickType_t curr_tick = xTaskGetTickCount();
+    hw_timer_enable(true);
+
+    return curr_tick;
+}
+
+void Sampler::stop_timer() { hw_timer_enable(false); }

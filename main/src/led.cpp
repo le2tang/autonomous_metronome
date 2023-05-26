@@ -6,10 +6,13 @@
 #include "esp8266/gpio_register.h"
 #include "esp8266/pin_mux_register.h"
 
-Led::Led(gpio_num_t pin, int period, int channel)
-    : pin_(pin), period_(period), channel_(channel) {
+void Led::init() {
+    pin_ = GPIO_NUM_16;
+    period_ = 1000;
+    channel_ = 0;
+
     int duty = 0;
-    pwm_init(period_, &duty, channel_, &pin_);
+    pwm_init(period_, &duty, 1, &pin_);
     pwm_set_phase(channel_, 0);
 
     pwm_start();

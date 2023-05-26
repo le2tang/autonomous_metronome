@@ -11,10 +11,20 @@
 #include "tempo_extraction.h"
 #include "util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class AutonomousMetronome {
   public:
-    void led_display_task(void *arg);
-    void tempo_extraction_task(void *arg);
+    AutonomousMetronome();
+    ~AutonomousMetronome() {}
+
+    void led_display_task();
+    void tempo_extraction_task();
+
+    static void led_display_task_impl(void *arg);
+    static void tempo_extraction_task_impl(void *arg);
 
   private:
     TaskHandle_t led_display_task_handle_;
@@ -29,3 +39,7 @@ class AutonomousMetronome {
 
     Sampler sampler_;
 };
+
+#ifdef __cplusplus
+}
+#endif

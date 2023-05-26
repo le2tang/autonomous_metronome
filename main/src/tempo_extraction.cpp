@@ -27,15 +27,15 @@ void TempoExtraction::init(const TempoExtractionParams &params) {
         float peak_freq = (params.start_bpm + params.step_bpm * idx) / 60;
 
         filterbank_[idx] = new IIRFilter(3);
-        filterbank_[idx]->set_stage(0, iirpeak(0.5 * peak_freq,
-                                               params.filter_q_factor,
-                                               params.sample_rate));
-        filterbank_[idx]->set_stage(1, iirpeak(peak_freq,
-                                               0.25 * params.filter_q_factor,
-                                               params.sample_rate));
-        filterbank_[idx]->set_stage(2, iirpeak(1.5 * peak_freq,
-                                               0.5 * params.filter_q_factor,
-                                               params.sample_rate));
+        filterbank_[idx]->set_stage(0, design_iirpeak(0.5 * peak_freq,
+                                                      params.filter_q_factor,
+                                                      params.sample_rate));
+        filterbank_[idx]->set_stage(
+            1, design_iirpeak(peak_freq, 0.25 * params.filter_q_factor,
+                              params.sample_rate));
+        filterbank_[idx]->set_stage(
+            2, design_iirpeak(1.5 * peak_freq, 0.5 * params.filter_q_factor,
+                              params.sample_rate));
     }
 
     pwr_spectrum_ = new float[params.num_filters];

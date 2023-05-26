@@ -17,6 +17,8 @@ struct TempoExtractionParams {
 };
 
 class TempoExtraction {
+  public:
+    TempoExtraction() {}
     ~TempoExtraction();
 
     void init(const TempoExtractionParams &params);

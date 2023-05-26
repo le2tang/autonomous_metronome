@@ -6,6 +6,7 @@ namespace fft {
 
 class RFFTParams {
   public:
+    RFFTParams() {}
     RFFTParams(int rfft_size);
     ~RFFTParams();
 

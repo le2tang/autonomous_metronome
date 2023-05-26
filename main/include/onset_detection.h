@@ -1,3 +1,7 @@
+#pragma once
+
+#include "esp_system.h"
+
 #include "rfft.h"
 
 struct OnsetDetectionParams {
@@ -5,18 +9,21 @@ struct OnsetDetectionParams {
     int num_bands;
 };
 
-#pragma once
-
 class OnsetDetection {
+  public:
+    OnsetDetection() {}
     ~OnsetDetection();
 
     void init(const OnsetDetectionParams &params);
 
-    float update(float *in);
+    void load_input(uint16_t *in);
+    float update();
 
   private:
     int num_samples_;
     int num_bands_;
+
+    float *input_;
 
     fft::RFFTParams rfft_params_;
     fft::RFFT rfft_inst_;

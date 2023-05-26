@@ -6,12 +6,16 @@
 struct LedDisplayParams {
     float transition_duration;
 
+    float blend_speed;
+
     float led_decay;
-    unsigned int led_pin;
 };
 
 class LedDisplay {
   public:
+    LedDisplay() {}
+    ~LedDisplay() {}
+
     void init(const LedDisplayParams &params);
 
     void reset_start_millis();
@@ -23,10 +27,11 @@ class LedDisplay {
     void update();
 
   private:
-    unsigned long start_millis_;
+    float start_time_;
 
     float last_transition_time_;
     float transition_duration_;
+    float blend_speed_;
 
     TempoEstimate last_tempo_;
     TempoEstimate tempo_;
