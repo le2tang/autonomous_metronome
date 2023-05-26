@@ -1,4 +1,4 @@
-#include "daisy.h"
+#include "rfft.h"
 
 struct OnsetDetectionParams {
     int num_bands;
@@ -9,16 +9,17 @@ struct OnsetDetectionParams {
 
 class OnsetDetection {
     ~OnsetDetection();
-    
+
     void init(const OnsetDetectionParams &params);
 
-    float update(daisy::AudioHandle::InputBuffer in, size_t size);
+    float update(float *in);
 
-private:
+  private:
     int num_bands_;
     int channel_;
 
-    arm_rfft_fast_instance_f16 rfft_inst_;
+    fft::RFFTParams rfft_params_;
+    fft::RFFT rfft_inst_;
 
     float *onset_;
     float *last_mag_sq_;

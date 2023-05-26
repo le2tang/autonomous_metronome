@@ -1,10 +1,11 @@
 #include "iir_filter.h"
 
+#include <math.h>
+
 #include "biquad.h"
 
-IIRFilter::IIRFilter(int num_stages):
-        num_stages_(num_stages),
-        stages_(new Biquad[num_stages]) {}
+IIRFilter::IIRFilter(int num_stages)
+    : num_stages_(num_stages), stages_(new Biquad *[num_stages]) {}
 
 IIRFilter::~IIRFilter() {
     if (stages_) {
@@ -12,17 +13,11 @@ IIRFilter::~IIRFilter() {
     }
 }
 
-void IIRFilter::set_stage(int idx, Biquad *stage) {
-    stages_[idx] = stage;
-}
+void IIRFilter::set_stage(int idx, Biquad *stage) { stages_[idx] = stage; }
 
-Biquad *IIRFilter::get_stage(int idx) {
-    return stages_[idx];
-}
+Biquad *IIRFilter::get_stage(int idx) { return stages_[idx]; }
 
-const Biquad *IIRFilter::get_stage(int idx) const {
-    return stages_[idx];
-}
+const Biquad *IIRFilter::get_stage(int idx) const { return stages_[idx]; }
 
 float IIRFilter::filter(float x) {
     float y = x;
@@ -38,11 +33,11 @@ Biquad *warped_tustin(Biquad *analog, float sample_rate, float warp_freq) {
 }
 
 Biquad *tustin(Biquad *analog, float sample_rate) {
-    float K = 2 * fs;
+    float K = 2 * sample_rate;
     return _tustin(analog, K);
 }
 
-Biquad *_tustin(Biquad *analog, float K); {
+Biquad *_tustin(Biquad *analog, float K) {
     float b0 = analog->b0;
     float b1 = analog->b1;
     float b2 = analog->b2;

@@ -1,8 +1,10 @@
 #include "iir_peak.h"
 
+#include <math.h>
+
 #include "biquad.h"
 
-Biquad *iirpeak(float peak_freq, float q_factor, float sample_rate) {
+Biquad *design_iirpeak(float peak_freq, float q_factor, float sample_rate) {
     double peak_freq = 2 * M_PI * peak_freq / sample_rate;
     double bandwidth = peak_freq / q_factor;
 

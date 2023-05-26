@@ -5,14 +5,14 @@
 
 struct LedDisplayParams {
     float transition_duration;
-    
+
     float led_decay;
     unsigned int led_pin;
 };
 
 class LedDisplay {
-public:
-    void init (const LedDisplayParams &params);
+  public:
+    void init(const LedDisplayParams &params);
 
     void reset_start_millis();
 
@@ -22,9 +22,9 @@ public:
 
     void update();
 
-private:
+  private:
     unsigned long start_millis_;
-    
+
     float last_transition_time_;
     float transition_duration_;
 

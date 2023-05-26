@@ -13,7 +13,7 @@ class PhaseExtraction {
 
     float update(float tempo_freq);
 
-private:
+  private:
     int num_samples_;
     float sample_rate_;
     const Buffer *in_buf_;

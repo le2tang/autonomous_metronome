@@ -1,18 +1,9 @@
-TARGET = daisy
+#
+# This is a project Makefile. It is assumed the directory this Makefile resides in is a
+# project subdirectory.
+#
 
-DSP_LIB = \
-biquad.cpp \
-iir_filter.cpp \
-iir_peak.cpp.cpp \
-util.cpp
+PROJECT_NAME := autonomous_metronome
 
-METRONOME_LIB = \
-onset_detection.cpp \
-phase_extraction.cpp \
-tempo_extraction.cpp
+include $(IDF_PATH)/make/project.mk
 
-CPP_SOURCES = main.cpp DSP_LIB METRONOME_LIB
-
-LIBDAISY_DIR = ../../libDaisy
-SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
-include $(SYSTEM_FILES_DIR)/Makefile

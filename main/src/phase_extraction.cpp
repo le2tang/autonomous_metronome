@@ -1,9 +1,10 @@
 #include "phase_extraction.h"
 
-void PhaseExtraction::init(const PhaseExtractionParams &params, const Buffer &in) {
+void PhaseExtraction::init(const PhaseExtractionParams &params,
+                           const Buffer &in) {
     num_samples_ = params.num_samples;
     sample_rate_ = params.sample_rate;
-    
+
     in_buf_ = &in;
 
     start_time_sample_ = 0;
@@ -24,7 +25,7 @@ float PhaseExtraction::update(float tempo_freq) {
             ++pulse_count;
             pulse_idx -= sample_tempo_period;
         }
-        
+
         float mean_pulse = pulse_sum / pulse_count;
         if (mean_pulse > max_mean_pulse) {
             max_mean_pulse = mean_pulse;
@@ -32,9 +33,10 @@ float PhaseExtraction::update(float tempo_freq) {
         }
     }
 
-    float phase_est = fmod((start_time_sample_ + max_pulse_idx) / sample_tempo_period, 1);
+    float phase_est =
+        fmod((start_time_sample_ + max_pulse_idx) / sample_tempo_period, 1);
 
     start_time_sample_ += num_samples_;
-    
+
     return phase_est;
 }

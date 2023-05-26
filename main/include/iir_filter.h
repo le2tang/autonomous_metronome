@@ -3,7 +3,7 @@
 #include "biquad.h"
 
 class IIRFilter {
-public:
+  public:
     IIRFilter(int num_stages);
     ~IIRFilter();
 
@@ -14,10 +14,10 @@ public:
     inline int num_stages() const { return num_stages_; };
 
     float filter(float x);
-    
-protected:
+
+  protected:
     const int num_stages_;
-    Biquad *stages_;
+    Biquad **stages_;
 };
 
 Biquad *warped_tustin(Biquad *analog, float sample_rate, float warp_freq);

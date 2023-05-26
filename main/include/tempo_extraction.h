@@ -1,5 +1,7 @@
 #pragma once
 
+#include "iir_filter.h"
+
 struct TempoExtractionParams {
     float start_bpm;
     float step_bpm;
@@ -9,7 +11,7 @@ struct TempoExtractionParams {
 
     int num_filters;
     float pwr_decay;
-    
+
     float softmax_gain;
     float softmax_thresh;
 };
@@ -21,15 +23,18 @@ class TempoExtraction {
 
     float update(float sample);
 
-private:
+  private:
     int num_filters_;
-    IIRFilter *filterbank_;
-    
+    IIRFilter **filterbank_;
+
     float *pwr_spectrum_;
     float pwr_decay_;
-    
+
     float softmax_gain_;
     float softmax_thresh_;
+
+    float start_bpm_;
+    float step_bpm_;
 
     float freq_est_;
 };

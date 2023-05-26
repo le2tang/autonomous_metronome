@@ -1,12 +1,11 @@
 #include "led_display.h"
 
-#include "daisy.h"
 #include "util.h"
 
-void LedDisplay::init (const LedDisplayParams &params) {
+void LedDisplay::init(const LedDisplayParams &params) {
     last_transition_time_ = 0;
     transition_duration_ = params.transition_duration;
-    
+
     last_tempo_ = TempoEstimate(2, 0);
     tempo_ = TempoEstimate(2, 0);
 
@@ -14,9 +13,7 @@ void LedDisplay::init (const LedDisplayParams &params) {
     led_.Init(params.led_pin, false);
 }
 
-void LedDisplay::reset_start_millis() {
-    start_millis_ = System::GetNow();
-}
+void LedDisplay::reset_start_millis() { start_millis_ = System::GetNow(); }
 
 void LedDisplay::set_tempo(const TempoEstimate &new_tempo) {
     last_tempo_ = tempo_;
@@ -35,15 +32,18 @@ void LedDisplay::update() {
         unsigned int led_pwr = 256 * exp(-led_decay_ * phase);
 
         led_.Set(led_pwr);
-    }
-    else {
-        float last_phase_unwrapped = last_tempo_.rate * elapsed_time - last_tempo_.phase;
+    } else {
+        float last_phase_unwrapped =
+            last_tempo_.rate * elapsed_time - last_tempo_.phase;
         float curr_phase_unwrapped = tempo_.rate * elapsed_time - tempo_.phase;
-        float wgt = 1 / 1 + exp(-blend_speed_ * (elapsed_time - last_transition_time_ - transition_duration_ / 2));
+        float wgt =
+            1 / 1 + exp(-blend_speed_ * (elapsed_time - last_transition_time_ -
+                                         transition_duration_ / 2));
 
-        float phase = fmod(wgt * last_phase_unwrapped + (1 - wgt) * curr_phase_unwrapped, 1);
+        float phase = fmod(
+            wgt * last_phase_unwrapped + (1 - wgt) * curr_phase_unwrapped, 1);
         unsigned int led_pwr = 256 * exp(-led_decay_ * phase);
-        
+
         led_.Set(led_pwr);
     }
 }

@@ -13,30 +13,20 @@ struct Buffer {
         }
     }
 
-    inline float &operator[](size_t idx) {
-        return data[idx];
-    }
+    inline float &operator[](size_t idx) { return data[idx]; }
 
-    inline float operator[](size_t idx) const {
-        return data[idx];
-    }
+    inline float operator[](size_t idx) const { return data[idx]; }
 
     inline void push(float val) {
         data[curr_idx] = val;
         ++curr_idx;
     }
 
-    inline void reset() {
-        curr_idx = 0;
-    }
+    inline void reset() { curr_idx = 0; }
 
-    inline bool empty() const {
-        return curr_idx == 0;
-    }
+    inline bool empty() const { return curr_idx == 0; }
 
-    inline bool full() const {
-        return curr_idx == num_samples;
-    }
+    inline bool full() const { return curr_idx == num_samples; }
 
     float *data;
     size_t curr_idx;
