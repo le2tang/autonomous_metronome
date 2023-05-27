@@ -2,6 +2,10 @@
 
 #include "biquad.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class IIRFilter {
   public:
     IIRFilter(int num_stages);
@@ -23,3 +27,7 @@ class IIRFilter {
 Biquad *warped_tustin(Biquad *analog, float sample_rate, float warp_freq);
 Biquad *tustin(Biquad *analog, float sample_rate);
 Biquad *_tustin(Biquad *analog, float K);
+
+#ifdef __cplusplus
+}
+#endif

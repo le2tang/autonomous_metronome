@@ -15,6 +15,10 @@ struct SamplerParams {
     int sample_period_us;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class Sampler {
   public:
     Sampler() {}
@@ -36,3 +40,7 @@ class Sampler {
 
     int sample_byte_size_;
 };
+
+#ifdef __cplusplus
+}
+#endif

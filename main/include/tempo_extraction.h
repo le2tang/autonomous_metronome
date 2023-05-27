@@ -16,6 +16,10 @@ struct TempoExtractionParams {
     float softmax_thresh;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class TempoExtraction {
   public:
     TempoExtraction() {}
@@ -40,3 +44,7 @@ class TempoExtraction {
 
     float freq_est_;
 };
+
+#ifdef __cplusplus
+}
+#endif

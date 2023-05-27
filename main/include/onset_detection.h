@@ -9,6 +9,10 @@ struct OnsetDetectionParams {
     int num_bands;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class OnsetDetection {
   public:
     OnsetDetection() {}
@@ -33,3 +37,7 @@ class OnsetDetection {
     float *last_last_phase_;
     float *last_phase_;
 };
+
+#ifdef __cplusplus
+}
+#endif

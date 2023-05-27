@@ -1,6 +1,10 @@
 #pragma once
 
-#include "driver/gpio.h"
+#include "esp_system.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 class Led {
   public:
@@ -11,7 +15,11 @@ class Led {
     void set(float pwr);
 
   private:
-    gpio_num_t pin_;
-    int period_;
-    int channel_;
+    uint32_t pin_;
+    uint32_t period_;
+    uint32_t channel_;
 };
+
+#ifdef __cplusplus
+}
+#endif

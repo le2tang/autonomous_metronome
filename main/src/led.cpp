@@ -3,6 +3,8 @@
 #include "driver/gpio.h"
 #include "driver/pwm.h"
 
+#include "esp_system.h"
+
 #include "esp8266/gpio_register.h"
 #include "esp8266/pin_mux_register.h"
 
@@ -11,7 +13,7 @@ void Led::init() {
     period_ = 1000;
     channel_ = 0;
 
-    int duty = 0;
+    uint32_t duty = 0;
     pwm_init(period_, &duty, 1, &pin_);
     pwm_set_phase(channel_, 0);
 
@@ -19,7 +21,7 @@ void Led::init() {
 }
 
 void Led::set(float pwr) {
-    int duty = pwr * period_;
+    uint32_t duty = pwr * period_;
     pwm_set_duty(channel_, duty);
     pwm_start();
 }

@@ -2,6 +2,15 @@
 
 #include <cstddef>
 
+struct TempoEstimate {
+    float rate;
+    float phase;
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct Buffer {
     Buffer() : data(NULL), curr_idx(0), num_samples(0) {}
     Buffer(size_t size) { init(size); }
@@ -38,7 +47,6 @@ struct Buffer {
     size_t num_samples;
 };
 
-struct TempoEstimate {
-    float rate;
-    float phase;
-};
+#ifdef __cplusplus
+}
+#endif

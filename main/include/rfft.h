@@ -22,6 +22,10 @@ class RFFTParams {
     float *b_coeffs_;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class RFFT : public FFT {
   public:
     ~RFFT();
@@ -42,3 +46,7 @@ class RFFT : public FFT {
 };
 
 } // namespace fft
+
+#ifdef __cplusplus
+}
+#endif

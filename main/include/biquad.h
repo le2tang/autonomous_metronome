@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class Biquad {
   public:
     Biquad(float b0, float b1, float b2, float a1, float a2);
@@ -18,3 +22,7 @@ class Biquad {
     const float a1_, a2_;
     float w1_, w2_;
 };
+
+#ifdef __cplusplus
+}
+#endif

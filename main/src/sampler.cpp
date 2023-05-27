@@ -8,8 +8,6 @@
 
 #include "driver/hw_timer.h"
 
-#include "mcp3002.h"
-
 void Sampler::init(const SamplerParams &params) {
     stream_buf_ = xStreamBufferCreate(
         params.buffer_size, params.buffer_trigger * params.sample_byte_size);

@@ -11,6 +11,10 @@ struct LedDisplayParams {
     float led_decay;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class LedDisplay {
   public:
     LedDisplay() {}
@@ -39,3 +43,7 @@ class LedDisplay {
     float led_decay_;
     Led led_;
 };
+
+#ifdef __cplusplus
+}
+#endif

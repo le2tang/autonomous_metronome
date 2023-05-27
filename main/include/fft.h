@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 namespace fft {
 
 class FFT {
@@ -22,3 +26,7 @@ class FFT {
 };
 
 } // namespace fft
+
+#ifdef __cplusplus
+}
+#endif

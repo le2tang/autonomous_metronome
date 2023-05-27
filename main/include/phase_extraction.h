@@ -7,6 +7,10 @@ struct PhaseExtractionParams {
     float sample_rate;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class PhaseExtraction {
   public:
     PhaseExtraction() {}
@@ -23,3 +27,7 @@ class PhaseExtraction {
 
     int start_time_sample_;
 };
+
+#ifdef __cplusplus
+}
+#endif
