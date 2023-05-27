@@ -2,7 +2,10 @@
 
 #include <math.h>
 
+#include "esp_log.h"
 #include "esp_system.h"
+
+#include "memory.h"
 
 OnsetDetection::~OnsetDetection() {
     if (input_) {
@@ -38,13 +41,11 @@ void OnsetDetection::init(const OnsetDetectionParams &params) {
 }
 
 void OnsetDetection::load_input(uint16_t *in) {
-    uint16_t *src = in;
-    float *dest = input_;
-    for (int idx = 0; idx < num_samples_ + 2; ++idx) {
-        (*dest++) = (*src++);
+    for (int idx = 0; idx < num_samples_; ++idx) {
+        input_[idx] = in[idx];
     }
-    (*dest++) = 0;
-    *dest = 0;
+    input_[num_samples_] = 0;
+    input_[num_samples_ + 1] = 0;
 }
 
 float OnsetDetection::update() {

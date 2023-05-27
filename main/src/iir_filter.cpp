@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "biquad.h"
+#include "memory.h"
 
 IIRFilter::IIRFilter(int num_stages)
     : num_stages_(num_stages), stages_(new Biquad *[num_stages]) {}

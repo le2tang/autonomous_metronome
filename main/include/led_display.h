@@ -22,7 +22,7 @@ class LedDisplay {
 
     void init(const LedDisplayParams &params);
 
-    void reset_start_millis();
+    void reset_start_time();
 
     void set_tempo(const TempoEstimate &new_tempo);
     TempoEstimate &get_tempo();

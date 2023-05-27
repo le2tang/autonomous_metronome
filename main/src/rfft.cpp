@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+#include "memory.h"
+
 namespace fft {
 
 RFFTParams::RFFTParams(int rfft_size) { init(rfft_size); }

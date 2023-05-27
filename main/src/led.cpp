@@ -9,7 +9,7 @@
 #include "esp8266/pin_mux_register.h"
 
 void Led::init() {
-    pin_ = GPIO_NUM_16;
+    pin_ = 5;
     period_ = 1000;
     channel_ = 0;
 

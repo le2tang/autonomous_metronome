@@ -11,27 +11,31 @@ void LedDisplay::init(const LedDisplayParams &params) {
     last_transition_time_ = 0;
     transition_duration_ = params.transition_duration;
 
-    last_tempo_ = TempoEstimate{.rate = 2, .phase = 0};
-    tempo_ = TempoEstimate{.rate = 2, .phase = 0};
+    last_tempo_.rate = 2;
+    last_tempo_.phase = 0;
+
+    tempo_.rate = 2;
+    tempo_.phase = 0;
 
     blend_speed_ = params.blend_speed;
 
     led_decay_ = params.led_decay;
+    led_.init();
 }
 
-void LedDisplay::reset_start_millis() {
-    start_time_ = xTaskGetTickCount() / configTICK_RATE_HZ;
+void LedDisplay::reset_start_time() {
+    start_time_ = (float)xTaskGetTickCount() / configTICK_RATE_HZ;
 }
 
 void LedDisplay::set_tempo(const TempoEstimate &new_tempo) {
     last_tempo_ = tempo_;
     tempo_ = new_tempo;
 
-    last_transition_time_ = xTaskGetTickCount() / configTICK_RATE_HZ;
+    last_transition_time_ = (float)xTaskGetTickCount() / configTICK_RATE_HZ;
 }
 
 void LedDisplay::update() {
-    float curr_time = xTaskGetTickCount() / configTICK_RATE_HZ;
+    float curr_time = (float)xTaskGetTickCount() / configTICK_RATE_HZ;
     float elapsed_time = curr_time - start_time_;
 
     if (curr_time - last_transition_time_ > transition_duration_) {

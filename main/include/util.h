@@ -2,6 +2,8 @@
 
 #include <cstddef>
 
+#include "memory.h"
+
 struct TempoEstimate {
     float rate;
     float phase;

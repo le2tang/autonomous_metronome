@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+#include "memory.h"
+
 namespace fft {
 
 FFT::~FFT() {

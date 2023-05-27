@@ -14,7 +14,9 @@ void Sampler::init(const SamplerParams &params) {
 
     sample_byte_size_ = params.sample_byte_size;
 
-    hw_timer_init(callback_impl, NULL);
+    adc_.init();
+
+    hw_timer_init(callback_impl, this);
     hw_timer_set_load_data(params.sample_period_us);
     hw_timer_set_reload(true);
 }

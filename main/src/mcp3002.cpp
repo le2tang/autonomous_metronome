@@ -5,7 +5,7 @@
 #include "esp8266/gpio_register.h"
 #include "esp8266/pin_mux_register.h"
 
-MCP3002::MCP3002() {
+void MCP3002::init() {
     gpio_config_t io_conf;
     // disable interrupt
     io_conf.intr_type = GPIO_INTR_DISABLE;

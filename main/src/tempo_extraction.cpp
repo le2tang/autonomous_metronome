@@ -4,6 +4,7 @@
 
 #include "iir_filter.h"
 #include "iir_peak.h"
+#include "memory.h"
 
 TempoExtraction::~TempoExtraction() {
     if (filterbank_) {
