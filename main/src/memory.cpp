@@ -7,19 +7,19 @@
 #include "memory.h"
 
 void *operator new(size_t size) {
-    ESP_LOGI("MEM", "alloc %dB", size);
+    // ESP_LOGI("MEM", "alloc %dB", size);
     return pvPortMalloc(size);
 }
 void *operator new[](size_t size) {
-    ESP_LOGI("MEM", "Alloc %dB", size);
+    // ESP_LOGI("MEM", "Alloc %dB", size);
     return pvPortMalloc(size);
 }
 
 void operator delete(void *ptr) {
-    ESP_LOGI("MEM", "del %08X", (uint32_t)ptr);
+    // ESP_LOGI("MEM", "del %08X", (uint32_t)ptr);
     vPortFree(ptr);
 }
 void operator delete[](void *ptr) {
-    ESP_LOGI("MEM", "Del %08X", (uint32_t)ptr);
+    // ESP_LOGI("MEM", "Del %08X", (uint32_t)ptr);
     vPortFree(ptr);
 }

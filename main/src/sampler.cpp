@@ -17,8 +17,11 @@ void Sampler::init(const SamplerParams &params) {
     adc_.init();
 
     hw_timer_init(callback_impl, this);
-    hw_timer_set_load_data(params.sample_period_us);
     hw_timer_set_reload(true);
+    hw_timer_set_clkdiv(TIMER_CLKDIV_1);
+    hw_timer_set_intr_type(TIMER_EDGE_INT);
+    hw_timer_set_load_data(((TIMER_BASE_CLK >> hw_timer_get_clkdiv()) / 1E6) *
+                           params.sample_period_us);
 }
 
 void Sampler::callback_impl(void *arg) {

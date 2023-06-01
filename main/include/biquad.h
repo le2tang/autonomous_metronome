@@ -17,11 +17,17 @@ class Biquad {
 
     float filter(float x);
 
+    float eval_freq_gain(float norm_freq);
+
   private:
     const float b0_, b1_, b2_;
     const float a1_, a2_;
     float w1_, w2_;
 };
+
+Biquad *warped_tustin(const Biquad *analog, float sample_rate, float warp_freq);
+Biquad *tustin(const Biquad *analog, float sample_rate);
+Biquad *tustin_(const Biquad *analog, float K);
 
 #ifdef __cplusplus
 }

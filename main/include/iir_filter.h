@@ -17,16 +17,17 @@ class IIRFilter {
 
     inline int num_stages() const { return num_stages_; };
 
+    inline void set_gain(float gain) { gain_ = gain; }
+    inline float get_gain() const { return gain_; }
+
     float filter(float x);
 
   protected:
     const int num_stages_;
     Biquad **stages_;
-};
 
-Biquad *warped_tustin(Biquad *analog, float sample_rate, float warp_freq);
-Biquad *tustin(Biquad *analog, float sample_rate);
-Biquad *_tustin(Biquad *analog, float K);
+    float gain_;
+};
 
 #ifdef __cplusplus
 }

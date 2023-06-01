@@ -4,6 +4,7 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
+#include "decimator.h"
 #include "led_display.h"
 #include "onset_detection.h"
 #include "phase_extraction.h"
@@ -34,6 +35,7 @@ class AutonomousMetronome {
 
     LedDisplay led_display_;
     OnsetDetection onset_detection_;
+    Decimator decimator_;
     TempoExtraction tempo_extraction_;
     PhaseExtraction phase_extraction_;
 

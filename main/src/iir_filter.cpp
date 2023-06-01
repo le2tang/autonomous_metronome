@@ -6,7 +6,7 @@
 #include "memory.h"
 
 IIRFilter::IIRFilter(int num_stages)
-    : num_stages_(num_stages), stages_(new Biquad *[num_stages]) {}
+    : num_stages_(num_stages), stages_(new Biquad *[num_stages]), gain_(1) {}
 
 IIRFilter::~IIRFilter() {
     if (stages_) {
@@ -25,33 +25,5 @@ float IIRFilter::filter(float x) {
     for (int idx = 0; idx < num_stages_; ++idx) {
         y = stages_[idx]->filter(y);
     }
-    return y;
-}
-
-Biquad *warped_tustin(Biquad *analog, float sample_rate, float warp_freq) {
-    float K = 2 * M_PI * warp_freq / tan(M_PI * warp_freq / sample_rate);
-    return _tustin(analog, K);
-}
-
-Biquad *tustin(Biquad *analog, float sample_rate) {
-    float K = 2 * sample_rate;
-    return _tustin(analog, K);
-}
-
-Biquad *_tustin(const Biquad *analog, float K) {
-    const float b0 = analog->b0();
-    const float b1 = analog->b1();
-    const float b2 = analog->b2();
-    const float a1 = analog->a1();
-    const float a2 = analog->a2();
-
-    float den = K * K + a1 * K + a2;
-
-    float bd0 = (b0 * K * K + b1 * K + b2) / den;
-    float bd1 = (2 * b2 - 2 * b0 * K * K) / den;
-    float bd2 = (b0 * K * K - b1 * K + b2) / den;
-    float ad1 = (2 * a2 - 2 * K * K) / den;
-    float ad2 = (K * K - a1 * K + a2) / den;
-
-    return new Biquad(bd0, bd1, bd2, ad1, ad2);
+    return gain_ * y;
 }
