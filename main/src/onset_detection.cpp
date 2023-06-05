@@ -12,6 +12,9 @@ OnsetDetection::~OnsetDetection() {
     if (input_) {
         delete[] input_;
     }
+    if (freq_weight_) {
+        delete[] freq_weight_;
+    }
     if (onset_) {
         delete[] onset_;
     }
@@ -33,18 +36,28 @@ void OnsetDetection::init(const OnsetDetectionParams &params) {
     input_ = new float[params.num_samples + 2];
     memset(input_, 0, (params.num_samples + 2) * sizeof(float));
 
-    rfft_inst_.twiddle_init(num_samples_);
-    rfft_params_.init(num_samples_);
+    freq_weight_ = new float[params.num_bands];
+    freq_weight_[0] = 0;
+    for (int idx = 1; idx < params.num_bands; ++idx) {
+        float bass_wgt = 2 / (10. * pow(((idx - 1.3)), 2) + 1);
+        float treble_wgt = 1 / (0.01 * pow(((idx - 45.0)), 2) + 1);
+        freq_weight_[idx] = bass_wgt + treble_wgt;
+        ESP_LOGI("OD", "%d: %d + %d = %d", idx, (int)(1000 * bass_wgt),
+                 (int)(1000 * treble_wgt), (int)(1000 * freq_weight_[idx]));
+    }
 
-    onset_ = new float[num_bands_];
-    last_mag_sq_ = new float[num_bands_];
-    last_last_phase_ = new float[num_bands_];
-    last_phase_ = new float[num_bands_];
+    rfft_inst_.twiddle_init(params.num_samples);
+    rfft_params_.init(params.num_samples);
 
-    memset(onset_, 0, num_bands_ * sizeof(float));
-    memset(last_mag_sq_, 0, num_bands_ * sizeof(float));
-    memset(last_last_phase_, 0, num_bands_ * sizeof(float));
-    memset(last_phase_, 0, num_bands_ * sizeof(float));
+    onset_ = new float[params.num_bands];
+    last_mag_sq_ = new float[params.num_bands];
+    last_last_phase_ = new float[params.num_bands];
+    last_phase_ = new float[params.num_bands];
+
+    memset(onset_, 0, params.num_bands * sizeof(float));
+    memset(last_mag_sq_, 0, params.num_bands * sizeof(float));
+    memset(last_last_phase_, 0, params.num_bands * sizeof(float));
+    memset(last_phase_, 0, params.num_bands * sizeof(float));
 }
 
 void OnsetDetection::load_input(uint16_t *in) {
@@ -64,27 +77,29 @@ float OnsetDetection::update() {
 
         float mag_sq =
             input_[idx_re] * input_[idx_re] + input_[idx_im] * input_[idx_im];
-        float phase = atan2(input_[idx_im], input_[idx_re]);
+        // float phase = atan2(input_[idx_im], input_[idx_re]);
 
-        if (phase - last_phase_[idx] >= M_PI) {
-            phase -= 2 * M_PI;
-        } else if (last_phase_[idx] - phase >= M_PI) {
-            phase += 2 * M_PI;
-        }
+        // if (phase - last_phase_[idx] >= M_PI) {
+        //     phase -= 2 * M_PI;
+        // } else if (last_phase_[idx] - phase >= M_PI) {
+        //     phase += 2 * M_PI;
+        // }
 
-        float phase_dev = phase - 2 * last_phase_[idx] + last_last_phase_[idx];
+        // float phase_dev = phase - 2 * last_phase_[idx] +
+        // last_last_phase_[idx];
         onset_[idx] =
-            sqrt(mag_sq + last_mag_sq_[idx] -
-                 2 * sqrt(mag_sq * last_mag_sq_[idx]) * cos(phase_dev));
+            (mag_sq > last_mag_sq_[idx]) ? (mag_sq - last_mag_sq_[idx]) : 0;
+        // sqrt(mag_sq + last_mag_sq_[idx] -
+        //      2 * sqrt(mag_sq * last_mag_sq_[idx]) * cos(phase_dev));
 
         last_mag_sq_[idx] = mag_sq;
-        last_last_phase_[idx] = last_phase_[idx];
-        last_phase_[idx] = phase;
+        // last_last_phase_[idx] = last_phase_[idx];
+        // last_phase_[idx] = phase;
     }
 
     float onset_sum = 0;
-    for (int idx = 0; idx < num_bands_; ++idx) {
-        onset_sum += onset_[idx];
+    for (int idx = 1; idx < num_bands_; ++idx) {
+        onset_sum += freq_weight_[idx] * onset_[idx];
     }
 
     return onset_sum;

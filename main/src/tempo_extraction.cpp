@@ -34,19 +34,42 @@ void TempoExtraction::init(const TempoExtractionParams &params) {
         float peak_freq = (params.start_bpm + params.step_bpm * idx) / 60;
 
         filterbank_[idx] = new IIRFilter(3);
-        filterbank_[idx]->set_stage(0, design_reslp(0.5 * peak_freq,
+        filterbank_[idx]->set_stage(2, design_reslp(0.5 * peak_freq,
                                                     params.filter_res_factor,
                                                     params.sample_rate));
-        filterbank_[idx]->set_stage(1, design_reslp(peak_freq,
-                                                    params.filter_res_factor,
-                                                    params.sample_rate));
-        filterbank_[idx]->set_stage(2, design_resbp(1.5 * peak_freq,
-                                                    params.filter_res_factor,
-                                                    params.sample_rate));
+        filterbank_[idx]->set_stage(
+            1, design_reslp(peak_freq, pow(params.filter_res_factor, 2),
+                            params.sample_rate));
+        filterbank_[idx]->set_stage(
+            0, design_resbp(1.5 * peak_freq, pow(params.filter_res_factor, 3),
+                            params.sample_rate));
+
+        ESP_LOGI("TE", "%d[0]: %d b=[%d %d %d] a=[1 %d %d]", idx,
+                 (int)(1000 * peak_freq),
+                 (int)(1000 * filterbank_[idx]->get_stage(0)->b0()),
+                 (int)(1000 * filterbank_[idx]->get_stage(0)->b1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(0)->b2()),
+                 (int)(1000 * filterbank_[idx]->get_stage(0)->a1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(0)->a2()));
+        ESP_LOGI("TE", "%d[1]: %d b=[%d %d %d] a=[1 %d %d]", idx,
+                 (int)(1000 * peak_freq),
+                 (int)(1000 * filterbank_[idx]->get_stage(1)->b0()),
+                 (int)(1000 * filterbank_[idx]->get_stage(1)->b1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(1)->b2()),
+                 (int)(1000 * filterbank_[idx]->get_stage(1)->a1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(1)->a2()));
+        ESP_LOGI("TE", "%d[2]: %d b=[%d %d %d] a=[1 %d %d]", idx,
+                 (int)(1000 * peak_freq),
+                 (int)(1000 * filterbank_[idx]->get_stage(2)->b0()),
+                 (int)(1000 * filterbank_[idx]->get_stage(2)->b1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(2)->b2()),
+                 (int)(1000 * filterbank_[idx]->get_stage(2)->a1()),
+                 (int)(1000 * filterbank_[idx]->get_stage(2)->a2()));
 
         float unit_gain_freq = 2 * M_PI * peak_freq / params.sample_rate;
         float gain =
             filterbank_[idx]->get_stage(0)->eval_freq_gain(unit_gain_freq) *
+            filterbank_[idx]->get_stage(1)->eval_freq_gain(unit_gain_freq) *
             filterbank_[idx]->get_stage(2)->eval_freq_gain(unit_gain_freq);
         filterbank_[idx]->set_gain(1 / gain);
     }
@@ -74,6 +97,9 @@ void TempoExtraction::init(const TempoExtractionParams &params) {
 float TempoExtraction::update(float sample) {
     float prob_sum = 0;
     float softmax[num_filters_];
+
+    float raw[num_filters_];
+    float smooth[num_filters_];
     for (int idx = 0; idx < num_filters_; ++idx) {
         float y = filterbank_[idx]->filter(sample);
 
@@ -81,14 +107,17 @@ float TempoExtraction::update(float sample) {
         float smooth_y = smooth_coef_[0] * (smooth_y_temp + smooth_delay_[idx]);
         smooth_delay_[idx] = smooth_y_temp;
 
-        pwr_spectrum_[idx] = (1 - pwr_decay_) * smooth_y * smooth_y +
-                             pwr_decay_ * pwr_spectrum_[idx];
+        pwr_spectrum_[idx] = pwr_decay_ * smooth_y * smooth_y +
+                             (1 - pwr_decay_) * pwr_spectrum_[idx];
 
-        float softmax_arg = ((pwr_spectrum_[idx]) > softmax_ovflo_)
-                                ? softmax_ovflo_
-                                : softmax_gain_ * pwr_spectrum_[idx];
+        float softmax_arg = (pwr_spectrum_[idx] < softmax_ovflo_)
+                                ? (softmax_gain_ * pwr_spectrum_[idx])
+                                : softmax_ovflo_;
         softmax[idx] = exp(softmax_arg);
         prob_sum += softmax[idx];
+
+        raw[idx] = sample;
+        smooth[idx] = smooth_y;
     }
 
     float max_prob = 0;
@@ -102,12 +131,18 @@ float TempoExtraction::update(float sample) {
         }
     }
 
-    ESP_LOGI("TE", "%07d %07d %07d %07d %07d %07d %07d %07d %d %d",
-             (int)(1E6 * pwr_spectrum_[0]), (int)(1E6 * pwr_spectrum_[1]),
-             (int)(1E6 * pwr_spectrum_[2]), (int)(1E6 * pwr_spectrum_[3]),
-             (int)(1E6 * pwr_spectrum_[4]), (int)(1E6 * pwr_spectrum_[5]),
-             (int)(1E6 * pwr_spectrum_[6]), (int)(1E6 * pwr_spectrum_[7]),
-             (int)(1000 * log10(pwr_spectrum_[1])), max_idx);
+    ESP_LOGI("TE", "%07d %07d %07d %03d %d", (int)(1E0 * raw[max_idx]),
+             (int)(1E0 * smooth[max_idx]), (int)(1E0 * pwr_spectrum_[max_idx]),
+             (int)(100 * softmax[max_idx]), max_idx);
+
+    // ESP_LOGI("TE", "%04d %04d %04d %04d %04d %04d %04d %04d %04d %d",
+    //          (int)(1E0 * pwr_spectrum_[0]), (int)(1E0 * pwr_spectrum_[1]),
+    //          (int)(1E0 * pwr_spectrum_[2]), (int)(1E0 * pwr_spectrum_[3]),
+    //          (int)(1E0 * pwr_spectrum_[4]), (int)(1E0 * pwr_spectrum_[5]),
+    //          (int)(1E0 * pwr_spectrum_[6]), (int)(1E0 * pwr_spectrum_[7]),
+    //          (int)(1E0 * pwr_spectrum_[8]),
+    //  (int)(1000 * log10(pwr_spectrum_[1])),
+    //  max_idx);
     // ESP_LOGI("TE", "%03d %03d %03d %03d %03d %03d %03d %03d %d",
     //          (int)(100 * softmax[0]), (int)(100 * softmax[1]),
     //          (int)(100 * softmax[2]), (int)(100 * softmax[3]),
@@ -139,7 +174,6 @@ float TempoExtraction::update(float sample) {
 
             freq_est_ = -0.5 * coef_b / coef_a;
         }
-        // ESP_LOGI("TE", "%dBPM", (int)(60 * freq_est_));
     }
     return freq_est_;
 }

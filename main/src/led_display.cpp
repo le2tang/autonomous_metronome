@@ -10,14 +10,13 @@
 void LedDisplay::init(const LedDisplayParams &params) {
     last_transition_time_ = 0;
     transition_duration_ = params.transition_duration;
+    blend_speed_ = 2 / params.transition_duration * log(1E3 - 1);
 
     last_tempo_.rate = 2;
     last_tempo_.phase = 0;
 
     tempo_.rate = 2;
     tempo_.phase = 0;
-
-    blend_speed_ = params.blend_speed;
 
     led_decay_ = params.led_decay;
     led_.init();

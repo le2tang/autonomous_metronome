@@ -28,6 +28,7 @@ class OnsetDetection {
     int num_bands_;
 
     float *input_;
+    float *freq_weight_;
 
     fft::RFFTParams rfft_params_;
     fft::RFFT rfft_inst_;

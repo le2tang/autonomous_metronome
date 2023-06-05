@@ -6,9 +6,11 @@
 
 #include "decimator.h"
 #include "led_display.h"
+#include "median_filter.h"
 #include "onset_detection.h"
 #include "phase_extraction.h"
 #include "sampler.h"
+#include "silence_detector.h"
 #include "tempo_extraction.h"
 #include "util.h"
 
@@ -36,7 +38,9 @@ class AutonomousMetronome {
     LedDisplay led_display_;
     OnsetDetection onset_detection_;
     Decimator decimator_;
+    MedianFilter median_filter_;
     TempoExtraction tempo_extraction_;
+    SilenceDetector silence_detector_;
     PhaseExtraction phase_extraction_;
 
     Sampler sampler_;

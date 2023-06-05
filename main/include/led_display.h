@@ -6,8 +6,6 @@
 struct LedDisplayParams {
     float transition_duration;
 
-    float blend_speed;
-
     float led_decay;
 };
 

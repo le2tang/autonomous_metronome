@@ -5,11 +5,11 @@
 struct TempoExtractionParams {
     float start_bpm;
     float step_bpm;
+    int num_filters;
 
     float filter_res_factor;
     float sample_rate;
 
-    int num_filters;
     float pwr_decay;
 
     float lowpass_freq;
