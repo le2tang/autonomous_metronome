@@ -12,7 +12,7 @@ struct SamplerParams {
     int buffer_size;
     int buffer_trigger;
     int sample_byte_size;
-    int sample_period_us;
+    unsigned int sample_period_us;
 };
 
 #ifdef __cplusplus
@@ -33,12 +33,14 @@ class Sampler {
     void stop_timer();
 
     inline StreamBufferHandle_t get_stream_buffer() { return stream_buf_; }
+    inline int get_trigger_byte_size() const { return trigger_byte_size_; }
 
   private:
     StreamBufferHandle_t stream_buf_;
     MCP3002 adc_;
 
     int sample_byte_size_;
+    int trigger_byte_size_;
 };
 
 #ifdef __cplusplus

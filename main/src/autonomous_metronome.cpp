@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 AutonomousMetronome::AutonomousMetronome() {
+    sync_queue_handle_ = xQueueCreate(2, sizeof(unsigned char));
     tempo_queue_handle_ = xQueueCreate(2, sizeof(TempoEstimate));
 
     xTaskCreate(led_display_task_impl, "led_display", 1024, this, 1,
@@ -29,18 +30,28 @@ void AutonomousMetronome::tempo_extraction_task_impl(void *arg) {
 }
 
 void AutonomousMetronome::led_display_task() {
-    led_display_.init(
-        LedDisplayParams{.transition_duration = 4, .led_decay = 10.0});
+    led_display_.init(LedDisplayParams{
+        .transition_duration = 8, .led_decay = 10, .led_pin = 5});
 
     // Turnstyle
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     xTaskNotifyGive(tempo_extraction_task_handle_);
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     ESP_LOGI("AM", "LED init");
 
     led_display_.reset_start_time();
 
+    unsigned char sync;
     TempoEstimate new_tempo;
     while (1) {
+        if (xQueueReceive(sync_queue_handle_, &sync, 0)) {
+            xTaskNotifyGive(tempo_extraction_task_handle_);
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+            led_display_.reset_start_time();
+
+            ESP_LOGI("AM", "Reset LED time");
+        }
+
         if (xQueueReceive(tempo_queue_handle_, &new_tempo, 0)) {
             ESP_LOGI("LED", "New tempo: %dBPM", (int)(new_tempo.rate * 60));
             led_display_.set_tempo(new_tempo);
@@ -48,15 +59,13 @@ void AutonomousMetronome::led_display_task() {
 
         led_display_.update();
 
-        // ESP_LOGI("LD", "%d", xTaskGetTickCount() * portTICK_RATE_MS);
-
         vTaskDelay(100 / portTICK_RATE_MS);
     }
 }
 
 void AutonomousMetronome::tempo_extraction_task() {
     const float sample_rate = 10000;
-    const int sample_period_us = 1E6 / sample_rate;
+    const unsigned int sample_period_us = 1E6 / sample_rate;
     const int hop_size = 128;
     const float hop_rate = sample_rate / hop_size;
     const int sample_byte_size = sizeof(uint16_t);
@@ -64,8 +73,8 @@ void AutonomousMetronome::tempo_extraction_task() {
     const int downsample_factor = 8;
     const float downsample_rate = hop_rate / downsample_factor;
     const int onset_history_size = 128;
-    const float onset_gain = 100;
 
+    uint16_t sample_buffer[hop_size];
     Buffer onset_buffer(onset_history_size);
 
     onset_detection_.init(OnsetDetectionParams{.num_samples = hop_size,
@@ -80,63 +89,96 @@ void AutonomousMetronome::tempo_extraction_task() {
                                                  .sample_rate = downsample_rate,
                                                  .pwr_decay = 0.1,
                                                  .lowpass_freq = 0.35,
-                                                 .softmax_gain = 100,
-                                                 .softmax_thresh = 0.5});
-    silence_detector_.init(SilenceDetectorParams{
-        .filter_freq = 0.05, .sample_rate = downsample_rate, .threshold = -2});
+                                                 .softmax_gain = 0.001});
+    auto_gain_detection_.init(
+        AutoGainDetectionParams{.filter_freq = 0.05, .sample_rate = hop_rate});
+    tempo_change_detection_.init(TempoChangeDetectionParams{
+        .confidence_threshold = 0.5, .gain_threshold = -2});
     phase_extraction_.init(
         PhaseExtractionParams{.num_samples = onset_history_size,
                               .sample_rate = downsample_rate},
         onset_buffer);
-    sampler_.init(SamplerParams{.buffer_size = 4 * hop_size,
+    sampler_.init(SamplerParams{.buffer_size = 2 * hop_size * sample_byte_size,
                                 .buffer_trigger = hop_size,
                                 .sample_byte_size = sample_byte_size,
                                 .sample_period_us = sample_period_us});
+    button_.init(4);
+    Led led;
+    led.init(0);
 
     // Turnstyle
-    xTaskNotifyGive(led_display_task_handle_);
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    ESP_LOGI("AM", "TE init");
+    xTaskNotifyGive(led_display_task_handle_);
 
-    // Start sampler
-    sampler_.start_timer();
-
-    uint16_t buf[hop_size];
     while (1) {
-        xStreamBufferReceive(sampler_.get_stream_buffer(), buf,
-                             buffer_byte_size, portMAX_DELAY);
+        if (button_.get_status()) {
+            led.set(true);
+            float start_time = xTaskGetTickCount() * portTICK_RATE_MS;
 
-        onset_detection_.load_input(buf);
-        float onset = onset_detection_.update() - median_filter_.median();
-        if (onset < 0) {
-            onset = 0;
-        }
-        // ESP_LOGI("AM", "%d", (int)(1E6 * onset));
+            xStreamBufferReset(sampler_.get_stream_buffer());
+            onset_buffer.reset();
+            phase_extraction_.reset_start_time();
 
-        bool decimate_sample_ready = false;
-        onset = decimator_.update(onset, decimate_sample_ready);
+            unsigned char sync = 1;
+            xQueueSend(sync_queue_handle_, &sync, 10 / portTICK_RATE_MS);
 
-        if (decimate_sample_ready) {
-            median_filter_.update(onset);
-            silence_detector_.update(onset);
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+            xTaskNotifyGive(led_display_task_handle_);
 
-            onset *= onset_gain * silence_detector_.get_norm_gain();
+            sampler_.start_timer();
 
-            float tempo_freq = tempo_extraction_.update(onset);
-            onset_buffer.push(onset);
+            TempoExtractionResult tempo;
+            while (!onset_buffer.full()) {
+                if (xStreamBufferBytesAvailable(sampler_.get_stream_buffer()) <
+                    sampler_.get_trigger_byte_size()) {
+                    vTaskDelay(1);
+                    continue;
+                }
+                xStreamBufferReceive(sampler_.get_stream_buffer(),
+                                     sample_buffer, buffer_byte_size,
+                                     portMAX_DELAY);
+                onset_detection_.load_input(sample_buffer);
 
-            if (onset_buffer.full()) {
-                if (!silence_detector_.is_silent()) {
-                    // float phase = phase_extraction_.update(tempo_freq);
+                float onset = onset_detection_.update();
+                auto_gain_detection_.update(onset);
 
-                    // TempoEstimate new_tempo{.rate = tempo_freq, .phase =
-                    // phase}; xQueueSend(tempo_queue_handle_, &new_tempo,
-                    //            10 / portTICK_RATE_MS);
+                onset -= median_filter_.get_median();
+                if (onset < 0) {
+                    onset = 0;
                 }
 
-                onset_buffer.reset();
+                bool decimate_sample_ready = false;
+                onset = decimator_.update(onset, decimate_sample_ready);
+
+                if (decimate_sample_ready) {
+                    median_filter_.update(onset);
+
+                    onset *= auto_gain_detection_.get_norm_gain();
+                    onset_buffer.push(onset);
+
+                    tempo = tempo_extraction_.update(onset);
+
+                    ESP_LOGI("AM", "%d %d", (int)(100 * tempo.confidence),
+                             (int)(1000 * auto_gain_detection_.get_log_gain()));
+                    tempo_change_detection_.update(tempo.confidence, -1);
+                }
             }
+
+            if (tempo_change_detection_.get_changed_detected()) {
+                float phase = phase_extraction_.update(tempo.freq);
+
+                TempoEstimate new_tempo{.rate = tempo.freq, .phase = phase};
+                xQueueSend(tempo_queue_handle_, &new_tempo,
+                           10 / portTICK_RATE_MS);
+            }
+
+            sampler_.stop_timer();
+
+            float end_time = xTaskGetTickCount() * portTICK_RATE_MS;
+            led.set(false);
         }
+
+        vTaskDelay(100 / portTICK_RATE_MS);
     }
 }
 

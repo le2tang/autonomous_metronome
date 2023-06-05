@@ -6,13 +6,15 @@
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
 
+#include "esp_log.h"
+
 #include "driver/hw_timer.h"
 
 void Sampler::init(const SamplerParams &params) {
-    stream_buf_ = xStreamBufferCreate(
-        params.buffer_size, params.buffer_trigger * params.sample_byte_size);
-
+    trigger_byte_size_ = params.buffer_trigger * params.sample_byte_size;
     sample_byte_size_ = params.sample_byte_size;
+
+    stream_buf_ = xStreamBufferCreate(params.buffer_size, trigger_byte_size_);
 
     adc_.init();
 

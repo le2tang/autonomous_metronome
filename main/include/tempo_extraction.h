@@ -15,7 +15,11 @@ struct TempoExtractionParams {
     float lowpass_freq;
 
     float softmax_gain;
-    float softmax_thresh;
+};
+
+struct TempoExtractionResult {
+    float freq;
+    float confidence;
 };
 
 #ifdef __cplusplus
@@ -29,7 +33,7 @@ class TempoExtraction {
 
     void init(const TempoExtractionParams &params);
 
-    float update(float sample);
+    TempoExtractionResult update(float sample);
 
   private:
     int num_filters_;
@@ -42,12 +46,9 @@ class TempoExtraction {
 
     float softmax_gain_;
     float softmax_ovflo_;
-    float softmax_thresh_;
 
     float start_bpm_;
     float step_bpm_;
-
-    float freq_est_;
 };
 
 #ifdef __cplusplus

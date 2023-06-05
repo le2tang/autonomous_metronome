@@ -41,8 +41,9 @@ struct Buffer {
     inline void reset() { curr_idx = 0; }
 
     inline bool empty() const { return curr_idx == 0; }
-
     inline bool full() const { return curr_idx == num_samples; }
+    inline int count() const { return curr_idx; }
+    inline int size() const { return num_samples; }
 
     float *data;
     size_t curr_idx;

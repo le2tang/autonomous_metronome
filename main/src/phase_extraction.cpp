@@ -42,3 +42,5 @@ float PhaseExtraction::update(float tempo_freq) {
 
     return phase_est;
 }
+
+void PhaseExtraction::reset_start_time() { start_time_sample_ = 0; }

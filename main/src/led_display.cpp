@@ -5,12 +5,14 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "esp_log.h"
+
 #include "util.h"
 
 void LedDisplay::init(const LedDisplayParams &params) {
     last_transition_time_ = 0;
     transition_duration_ = params.transition_duration;
-    blend_speed_ = 2 / params.transition_duration * log(1E3 - 1);
+    blend_speed_ = 2. / params.transition_duration * log(1. / (1E-2) - 1.);
 
     last_tempo_.rate = 2;
     last_tempo_.phase = 0;
@@ -19,7 +21,7 @@ void LedDisplay::init(const LedDisplayParams &params) {
     tempo_.phase = 0;
 
     led_decay_ = params.led_decay;
-    led_.init();
+    led_.init(params.led_pin);
 }
 
 void LedDisplay::reset_start_time() {
@@ -47,11 +49,11 @@ void LedDisplay::update() {
             last_tempo_.rate * elapsed_time - last_tempo_.phase;
         float curr_phase_unwrapped = tempo_.rate * elapsed_time - tempo_.phase;
         float wgt =
-            1 / 1 + exp(-blend_speed_ * (elapsed_time - last_transition_time_ -
-                                         transition_duration_ / 2));
+            1 / (1 + exp(-blend_speed_ * (curr_time - last_transition_time_ -
+                                          0.5 * transition_duration_)));
 
         float phase = fmod(
-            wgt * last_phase_unwrapped + (1 - wgt) * curr_phase_unwrapped, 1);
+            (1 - wgt) * last_phase_unwrapped + wgt * curr_phase_unwrapped, 1);
         float led_pwr = exp(-led_decay_ * phase);
 
         led_.set(led_pwr);

@@ -31,6 +31,11 @@ float Biquad::eval_freq_gain(float norm_freq) {
                 (den_re * den_re + den_im * den_im));
 }
 
+void Biquad::set_initial_conditions(float w1, float w2) {
+    w1_ = w1;
+    w2_ = w2;
+}
+
 Biquad *warped_tustin(const Biquad *analog, float sample_rate,
                       float warp_freq) {
     float K = 2 * M_PI * warp_freq / tan(M_PI * warp_freq / sample_rate);

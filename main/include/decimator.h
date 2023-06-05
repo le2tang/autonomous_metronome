@@ -7,6 +7,10 @@ struct DecimatorParams {
     int decimation_factor;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 class Decimator {
   public:
     Decimator() {}
@@ -22,3 +26,7 @@ class Decimator {
     int idx_;
     int factor_;
 };
+
+#ifdef __cplusplus
+}
+#endif

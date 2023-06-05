@@ -86,18 +86,12 @@ void TempoExtraction::init(const TempoExtractionParams &params) {
 
     softmax_gain_ = params.softmax_gain;
     softmax_ovflo_ = log((float)(1ULL << 31)) / params.softmax_gain;
-    softmax_thresh_ = params.softmax_thresh;
 
     start_bpm_ = params.start_bpm;
     step_bpm_ = params.step_bpm;
-
-    freq_est_ = 1.0;
 }
 
-float TempoExtraction::update(float sample) {
-    float prob_sum = 0;
-    float softmax[num_filters_];
-
+TempoExtractionResult TempoExtraction::update(float sample) {
     float raw[num_filters_];
     float smooth[num_filters_];
     for (int idx = 0; idx < num_filters_; ++idx) {
@@ -110,30 +104,29 @@ float TempoExtraction::update(float sample) {
         pwr_spectrum_[idx] = pwr_decay_ * smooth_y * smooth_y +
                              (1 - pwr_decay_) * pwr_spectrum_[idx];
 
-        float softmax_arg = (pwr_spectrum_[idx] < softmax_ovflo_)
-                                ? (softmax_gain_ * pwr_spectrum_[idx])
-                                : softmax_ovflo_;
-        softmax[idx] = exp(softmax_arg);
-        prob_sum += softmax[idx];
-
         raw[idx] = sample;
         smooth[idx] = smooth_y;
     }
 
-    float max_prob = 0;
+    float max_pwr = 0;
     int max_idx = 0;
     for (int idx = 0; idx < num_filters_; ++idx) {
-        softmax[idx] /= prob_sum;
-
-        if (pwr_spectrum_[idx] > max_prob) {
-            max_prob = pwr_spectrum_[idx];
+        if (pwr_spectrum_[idx] > max_pwr) {
+            max_pwr = pwr_spectrum_[idx];
             max_idx = idx;
         }
     }
 
-    ESP_LOGI("TE", "%07d %07d %07d %03d %d", (int)(1E0 * raw[max_idx]),
-             (int)(1E0 * smooth[max_idx]), (int)(1E0 * pwr_spectrum_[max_idx]),
-             (int)(100 * softmax[max_idx]), max_idx);
+    float exp_sum_norm = 0;
+    for (int idx = 0; idx < num_filters_; ++idx) {
+        exp_sum_norm += exp(pwr_spectrum_[idx] - max_pwr);
+    }
+
+    float softmax[num_filters_];
+    for (int idx = 0; idx < num_filters_; ++idx) {
+        float log_sum_exp = max_pwr + log(exp_sum_norm);
+        softmax[idx] = exp(pwr_spectrum_[idx] - log_sum_exp);
+    }
 
     // ESP_LOGI("TE", "%04d %04d %04d %04d %04d %04d %04d %04d %04d %d",
     //          (int)(1E0 * pwr_spectrum_[0]), (int)(1E0 * pwr_spectrum_[1]),
@@ -143,37 +136,41 @@ float TempoExtraction::update(float sample) {
     //          (int)(1E0 * pwr_spectrum_[8]),
     //  (int)(1000 * log10(pwr_spectrum_[1])),
     //  max_idx);
-    // ESP_LOGI("TE", "%03d %03d %03d %03d %03d %03d %03d %03d %d",
+    // ESP_LOGI("TE", "%03d %03d %03d %03d %03d %03d %03d %03d %03d %d",
     //          (int)(100 * softmax[0]), (int)(100 * softmax[1]),
     //          (int)(100 * softmax[2]), (int)(100 * softmax[3]),
     //          (int)(100 * softmax[4]), (int)(100 * softmax[5]),
-    //          (int)(100 * softmax[6]), (int)(100 * softmax[7]), max_idx);
+    //          (int)(100 * softmax[6]), (int)(100 * softmax[7]),
+    //          (int)(100 * softmax[8]), max_idx);
 
-    if (softmax[max_idx] > softmax_thresh_) {
-        if (max_idx == 0 || max_idx == num_filters_ - 1) {
-            freq_est_ = (start_bpm_ + step_bpm_ * max_idx) / 60;
-        } else {
-            float f0 = (start_bpm_ + step_bpm_ * (max_idx - 1)) / 60;
-            float f1 = (start_bpm_ + step_bpm_ * max_idx) / 60;
-            float f2 = (start_bpm_ + step_bpm_ * (max_idx + 1)) / 60;
+    TempoExtractionResult result;
+    if (max_idx == 0 || max_idx == num_filters_ - 1) {
+        result.freq = (start_bpm_ + step_bpm_ * max_idx) / 60;
+    } else {
+        float f0 = (start_bpm_ + step_bpm_ * (max_idx - 1)) / 60;
+        float f1 = (start_bpm_ + step_bpm_ * max_idx) / 60;
+        float f2 = (start_bpm_ + step_bpm_ * (max_idx + 1)) / 60;
 
-            float f0_sq = f0 * f0;
-            float f1_sq = f1 * f1;
-            float f2_sq = f2 * f2;
+        float f0_sq = f0 * f0;
+        float f1_sq = f1 * f1;
+        float f2_sq = f2 * f2;
 
-            float lnp0 = log(pwr_spectrum_[max_idx - 1]);
-            float lnp1 = log(pwr_spectrum_[max_idx]);
-            float lnp2 = log(pwr_spectrum_[max_idx + 1]);
+        float lnp0 = log(pwr_spectrum_[max_idx - 1]);
+        float lnp1 = log(pwr_spectrum_[max_idx]);
+        float lnp2 = log(pwr_spectrum_[max_idx + 1]);
 
-            // float det = f0_sq * (f1 - f2) + f1_sq * (f2 -f0) + f2_sq *
-            // (f0 - f1);
-            float coef_a =
-                lnp0 * (f1 - f2) + lnp1 * (f2 - f0) + lnp2 * (f0 - f1);
-            float coef_b = lnp0 * (f2_sq - f1_sq) + lnp1 * (f0_sq - f2_sq) +
-                           lnp2 * (f1_sq - f0_sq);
+        // float det = f0_sq * (f1 - f2) + f1_sq * (f2 -f0) + f2_sq *
+        // (f0 - f1);
+        float coef_a = lnp0 * (f1 - f2) + lnp1 * (f2 - f0) + lnp2 * (f0 - f1);
+        float coef_b = lnp0 * (f2_sq - f1_sq) + lnp1 * (f0_sq - f2_sq) +
+                       lnp2 * (f1_sq - f0_sq);
 
-            freq_est_ = -0.5 * coef_b / coef_a;
-        }
+        result.freq = -0.5 * coef_b / coef_a;
     }
-    return freq_est_;
+    ESP_LOGI("TE", "%07d %07d %07d %03d %d", (int)(1E0 * raw[max_idx]),
+             (int)(1E0 * smooth[max_idx]), (int)(1E0 * pwr_spectrum_[max_idx]),
+             (int)(100 * softmax[max_idx]), (int)(result.freq * 60));
+
+    result.confidence = softmax[max_idx];
+    return result;
 }

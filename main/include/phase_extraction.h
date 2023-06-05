@@ -19,6 +19,7 @@ class PhaseExtraction {
     void init(const PhaseExtractionParams &params, const Buffer &in);
 
     float update(float tempo_freq);
+    void reset_start_time();
 
   private:
     int num_samples_;

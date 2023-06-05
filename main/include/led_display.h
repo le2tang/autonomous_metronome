@@ -7,6 +7,7 @@ struct LedDisplayParams {
     float transition_duration;
 
     float led_decay;
+    int led_pin;
 };
 
 #ifdef __cplusplus
@@ -39,7 +40,7 @@ class LedDisplay {
     TempoEstimate tempo_;
 
     float led_decay_;
-    Led led_;
+    PWMLed led_;
 };
 
 #ifdef __cplusplus

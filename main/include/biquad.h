@@ -18,6 +18,7 @@ class Biquad {
     float filter(float x);
 
     float eval_freq_gain(float norm_freq);
+    void set_initial_conditions(float w1, float w2);
 
   private:
     const float b0_, b1_, b2_;

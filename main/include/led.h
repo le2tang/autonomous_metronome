@@ -6,18 +6,29 @@
 extern "C" {
 #endif
 
-class Led {
+class PWMLed {
   public:
-    Led() {}
-    ~Led() {}
+    PWMLed() {}
+    ~PWMLed() {}
 
-    void init();
+    void init(int pin);
     void set(float pwr);
 
   private:
     uint32_t pin_;
     uint32_t period_;
     uint32_t channel_;
+};
+
+class Led {
+  public:
+    Led() {}
+    ~Led() {}
+    void init(int pin);
+    void set(bool state);
+
+  private:
+    int pin_;
 };
 
 #ifdef __cplusplus
