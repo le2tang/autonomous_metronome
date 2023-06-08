@@ -5,8 +5,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "esp_log.h"
-
 #include "util.h"
 
 void LedDisplay::init(const LedDisplayParams &params) {

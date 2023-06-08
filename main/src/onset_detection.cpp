@@ -3,7 +3,6 @@
 #include <cstring>
 #include <math.h>
 
-#include "esp_log.h"
 #include "esp_system.h"
 
 #include "memory.h"
@@ -42,8 +41,6 @@ void OnsetDetection::init(const OnsetDetectionParams &params) {
         float bass_wgt = 2 / (10. * pow(((idx - 1.3)), 2) + 1);
         float treble_wgt = 1 / (0.01 * pow(((idx - 45.0)), 2) + 1);
         freq_weight_[idx] = bass_wgt + treble_wgt;
-        ESP_LOGI("OD", "%d: %d + %d = %d", idx, (int)(1000 * bass_wgt),
-                 (int)(1000 * treble_wgt), (int)(1000 * freq_weight_[idx]));
     }
 
     rfft_inst_.twiddle_init(params.num_samples);

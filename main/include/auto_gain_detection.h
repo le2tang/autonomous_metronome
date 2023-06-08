@@ -2,8 +2,6 @@
 
 #include <math.h>
 
-#include "esp_log.h"
-
 #include "design_iir.h"
 #include "iir_filter.h"
 #include "util.h"
@@ -36,15 +34,6 @@ class AutoGainDetection {
     void update(float sample) {
         float log_gain = (sample > 1E-9) ? log(sample) : log(1E-9);
         gain_ = gain_filter_->filter(log_gain);
-        // if (log_gain > gain_) {
-        //     float steady_state_delay = 1 + gain_filter_->get_stage(0)->a1() +
-        //                                gain_filter_->get_stage(0)->a2();
-        //     gain_filter_->get_stage(0)->set_initial_conditions(
-        //         1 / steady_state_delay, 1 / steady_state_delay);
-        //     gain_ = gain_filter_->filter(log_gain);
-        // } else {
-        //     gain_ = gain_filter_->filter(log_gain);
-        // }
     }
 
     inline float get_log_gain() const { return gain_; }

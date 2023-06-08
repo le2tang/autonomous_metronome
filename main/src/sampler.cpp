@@ -6,8 +6,6 @@
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
 
-#include "esp_log.h"
-
 #include "driver/hw_timer.h"
 
 void Sampler::init(const SamplerParams &params) {

@@ -91,9 +91,9 @@ void AutonomousMetronome::tempo_extraction_task() {
                                                  .lowpass_freq = 0.35,
                                                  .softmax_gain = 0.001});
     auto_gain_detection_.init(
-        AutoGainDetectionParams{.filter_freq = 0.05, .sample_rate = hop_rate});
+        AutoGainDetectionParams{.filter_freq = 0.1, .sample_rate = hop_rate});
     tempo_change_detection_.init(TempoChangeDetectionParams{
-        .confidence_threshold = 0.5, .gain_threshold = -2});
+        .confidence_threshold = 0.5, .gain_threshold = 3});
     phase_extraction_.init(
         PhaseExtractionParams{.num_samples = onset_history_size,
                               .sample_rate = downsample_rate},
@@ -157,14 +157,11 @@ void AutonomousMetronome::tempo_extraction_task() {
                     onset_buffer.push(onset);
 
                     tempo = tempo_extraction_.update(onset);
-
-                    ESP_LOGI("AM", "%d %d", (int)(100 * tempo.confidence),
-                             (int)(1000 * auto_gain_detection_.get_log_gain()));
-                    tempo_change_detection_.update(tempo.confidence, -1);
                 }
             }
 
-            if (tempo_change_detection_.get_changed_detected()) {
+            if (tempo_change_detection_.get_changed_detected(tempo.confidence,
+                                                             onset_buffer)) {
                 float phase = phase_extraction_.update(tempo.freq);
 
                 TempoEstimate new_tempo{.rate = tempo.freq, .phase = phase};
