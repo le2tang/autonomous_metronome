@@ -48,17 +48,14 @@ template <typename key_t, class BinaryPredicate> class BinarySearchTree {
         return nullptr;
     }
 
-    bool remove(key_t del_key) {
-        node_t *del_prev;
-        node_t *del_node = search_with_prev_(del_key, &del_prev);
-        return remove_node_(del_node, del_prev);
-    }
-
     bool remove(node_t *del_node) {
         if (!del_node) {
             return false;
         }
-        return remove(del_node->key);
+
+        node_t *del_prev;
+        del_node = search_with_prev_(del_node, &del_prev);
+        return remove_node_(del_node, del_prev);
     }
 
     node_t *max() const { return max_from_node_(root_); }
@@ -92,13 +89,13 @@ template <typename key_t, class BinaryPredicate> class BinarySearchTree {
         ++size_;
     }
 
-    node_t *search_with_prev_(key_t query_key, node_t **prev) const {
+    node_t *search_with_prev_(node_t *query_node, node_t **prev) const {
         *prev = nullptr;
         node_t *curr = root_;
         while (curr) {
-            if (equal_(query_key, curr->key)) {
+            if (query_node == curr) {
                 return curr;
-            } else if (query_key > curr->key) {
+            } else if (query_node->key > curr->key) {
                 *prev = curr;
                 curr = curr->right;
             } else {

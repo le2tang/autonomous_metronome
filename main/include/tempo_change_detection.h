@@ -13,7 +13,7 @@ extern "C" {
 
 class TempoChangeDetection {
   public:
-    TempoChangeDetection() : status_(0) {}
+    TempoChangeDetection() {}
     ~TempoChangeDetection() {}
 
     void init(const TempoChangeDetectionParams &params) {
@@ -24,7 +24,7 @@ class TempoChangeDetection {
     bool get_changed_detected(float tempo_confidence,
                               const Buffer &onset_buffer) const {
         float onset_pwr = 0;
-        for (int idx = 0; idx < onset_history_size; ++idx) {
+        for (int idx = 0; idx < onset_buffer.size(); ++idx) {
             onset_pwr += onset_buffer[idx] * onset_buffer[idx];
         }
         return (tempo_confidence > confidence_threshold_) &&

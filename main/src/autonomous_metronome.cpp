@@ -113,7 +113,6 @@ void AutonomousMetronome::tempo_extraction_task() {
     while (1) {
         if (button_.get_status()) {
             led.set(true);
-            float start_time = xTaskGetTickCount() * portTICK_RATE_MS;
 
             xStreamBufferReset(sampler_.get_stream_buffer());
             onset_buffer.reset();
@@ -171,7 +170,6 @@ void AutonomousMetronome::tempo_extraction_task() {
 
             sampler_.stop_timer();
 
-            float end_time = xTaskGetTickCount() * portTICK_RATE_MS;
             led.set(false);
         }
 
