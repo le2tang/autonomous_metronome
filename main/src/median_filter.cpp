@@ -27,8 +27,8 @@ void MedianFilter::init(int size) {
 void MedianFilter::update(float val) {
     BinarySearchTreeNode<float> *node = window_[idx_];
 
-    if (!lower_.remove(node)) {
-        upper_.remove(node);
+    if (!lower_.remove(node->key)) {
+        upper_.remove(node->key);
     }
 
     BinarySearchTreeNode<float> *new_node =
@@ -37,11 +37,10 @@ void MedianFilter::update(float val) {
         // Upper full
         if (val > upper_.min()->key) {
             // In upper
-            BinarySearchTreeNode<float> *min_node = upper_.min();
-            float min_val = min_node->key;
-            upper_.remove(min_node);
-
-            min_node = new BinarySearchTreeNode<float>(min_val);
+            float min_val = upper_.min()->key;
+            upper_.remove(min_val);
+            BinarySearchTreeNode<float> *min_node =
+                new BinarySearchTreeNode<float>(min_val);
             lower_.insert(min_node);
 
             upper_.insert(new_node);
@@ -57,11 +56,10 @@ void MedianFilter::update(float val) {
             upper_.insert(new_node);
         } else {
             // In lower
-            BinarySearchTreeNode<float> *max_node = lower_.max();
-            float max_val = max_node->key;
-            lower_.remove(max_node);
-
-            max_node = new BinarySearchTreeNode<float>(max_val);
+            float max_val = lower_.max()->key;
+            BinarySearchTreeNode<float> *max_node =
+                new BinarySearchTreeNode<float>(max_val);
+            lower_.remove(max_val);
             upper_.insert(max_node);
 
             lower_.insert(new_node);
